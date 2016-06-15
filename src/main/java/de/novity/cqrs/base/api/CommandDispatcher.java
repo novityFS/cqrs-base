@@ -21,9 +21,17 @@ package de.novity.cqrs.base.api;
  * a command to be executed by your domain, the command dispatcher looks up a <code>CommandHandler</code> that can
  * fulfil the request.
  * <p/>
- * You must have you infrastructure implement at least one command dispatcher and publish it to your clients.
+ * You must have your infrastructure implement at least one command dispatcher and publish it to your clients.
  */
 public interface CommandDispatcher {
+    /**
+     * Registers a handler for a given command.
+     *
+     * @param commandType Class of command that the handler is registered for.
+     * @param handler The handler handling commands of the given command type.
+     */
+    void registerHandler(Class commandType, CommandHandler handler);
+
     /**
      * @param command The command to be executed by the domain
      * @throws Exception If the execution of the command failed

@@ -17,6 +17,7 @@
 package de.novity.cqrs.base.infrastructure;
 
 import de.novity.cqrs.base.api.Command;
+import de.novity.cqrs.base.api.CommandDispatcher;
 import de.novity.cqrs.base.api.CommandHandler;
 import mockit.Mocked;
 import mockit.Verifications;
@@ -24,13 +25,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class InMemoryCommandDispatcherTest {
-    private InMemoryCommandDispatcher dispatcher;
+    private CommandDispatcher dispatcher;
 
     @BeforeMethod
     public void setUp() throws Exception {
         dispatcher = new InMemoryCommandDispatcher();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     // Given I have a command
     // And a suitable command handler

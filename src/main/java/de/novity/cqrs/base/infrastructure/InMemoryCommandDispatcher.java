@@ -23,21 +23,30 @@ import de.novity.cqrs.base.api.CommandHandler;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An in memory implementation of a command dispatcher that can be used in standalone applications. The registered
+ * command handlers are backed by a <code>Map</code> implementation.
+ */
 public class InMemoryCommandDispatcher implements CommandDispatcher {
-    private final Map<Class<? extends Command>, CommandHandler<Command>> handlerMap;
+    private final Map<Class<Command>, CommandHandler> handlerMap;
 
     public InMemoryCommandDispatcher() {
-        this.handlerMap = new HashMap<Class<? extends Command>, CommandHandler<Command>>();
+        this.handlerMap = new HashMap<Class<Command>, CommandHandler>();
     }
 
-    public void registerHandler(Class<? extends Command> commandType, CommandHandler<Command> handler) {
+    @SuppressWarnings("unchecked")
+    public void registerHandler(Class commandType, CommandHandler handler) {
         handlerMap.put(commandType, handler);
     }
 
 
+    @SuppressWarnings("unchecked")
     public void execute(Command command) throws Exception {
-        @SuppressWarnings("unchecked")
-        CommandHandler<Command> handler = handlerMap.get(command.getClass());
+        if (command == null) {
+            throw new NullPointerException("You tried to execute a null command");
+        }
+
+        CommandHandler handler = handlerMap.get((Class<Command>) command.getClass());
 
         if (handler == null) {
             throw new NullPointerException("You didn't register a command handler for command " + command.getClass().getSimpleName());
