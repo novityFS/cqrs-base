@@ -18,6 +18,29 @@ package de.novity.cqrs.base.api;
 
 /**
  * A command handler is capable of executing the command specified by the command type <code>TCommand</code>
+ * <p/>
+ * See the following example for a command handler implementation:
+ * <p/>
+ * <pre>{@code
+ * public class MyCommandCommandHandler implements CommandHandler<MyCommand> {
+ *  private final EventPublisher publisher;
+ *  private final MyCommandRepository repository;
+ *
+ *  public MyCommandCommandHandler(EventPublisher publisher, MyCommandRepository repository) {
+ *    this.publisher = publisher;
+ *    this.repository = repository;
+ *  }
+ *
+ *  public void execute(MyCommand command) throws Exception {
+ *    MyRootAggregate aggregate = repository.findById(command.id);
+ *    aggregate.doSomething();
+ *
+ *    publisher.publish(aggregate.getEvents());
+ *    aggregate.commitEvents();
+ *  }
+ * }
+ * }</pre>
+ *
  * @param <TCommand> The type of the command that this handler can execute
  */
 public interface CommandHandler<TCommand> {
