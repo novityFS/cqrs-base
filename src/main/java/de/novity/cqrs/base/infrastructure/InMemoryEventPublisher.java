@@ -48,17 +48,21 @@ public class InMemoryEventPublisher implements EventPublisher, EventPublisherSer
         this.subscribers = new ArrayList<EventSubscriber>();
         this.eventQueue = new ArrayBlockingQueue<Event>(1024);
         this.asyncPublisher = null;
+
+        logger.info("InMemoryPublisher created");
     }
 
     public void addSubscriber(EventSubscriber subscriber) {
         synchronized (subscribers) {
             subscribers.add(subscriber);
+            logger.debug("Added subscriber " + subscriber);
         }
     }
 
     public void removeSubscriber(EventSubscriber subscriber) {
         synchronized (subscribers) {
             subscribers.remove(subscriber);
+            logger.debug("Removed subscriber " + subscriber);
         }
     }
 
@@ -69,6 +73,7 @@ public class InMemoryEventPublisher implements EventPublisher, EventPublisherSer
 
         asyncPublisher = new AsyncPublisher();
         asyncPublisher.start();
+        logger.info("Publisher started");
     }
 
     public void stop() {
@@ -79,9 +84,16 @@ public class InMemoryEventPublisher implements EventPublisher, EventPublisherSer
         try {
             asyncPublisher.interrupt();
             asyncPublisher.join(1000);
+            logger.info("Publisher stopped");
         } catch (InterruptedException e) {
            logger.error("Failed to stop publisher", e);
+        } finally {
+            asyncPublisher = null;
         }
+    }
+
+    public boolean isRunning() {
+        return asyncPublisher != null;
     }
 
     public void publish(Event event) throws Exception {
@@ -101,8 +113,6 @@ public class InMemoryEventPublisher implements EventPublisher, EventPublisherSer
 
         @Override
         public void run() {
-            logger.info("Publisher started");
-
             do {
                 try {
                     Event event = eventQueue.take();
@@ -115,9 +125,7 @@ public class InMemoryEventPublisher implements EventPublisher, EventPublisherSer
                 } catch (InterruptedException e) {
                     interrupt();
                 }
-            } while (isInterrupted() == false);
-
-            logger.info("Publisher finished");
+            } while (!isInterrupted());
         }
     }
 }
