@@ -26,12 +26,12 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-public class InMemoryEventPublisherTest {
-    private InMemoryEventPublisher publisher;
+public class InMemoryEventPublisherServiceTest {
+    private InMemoryEventPublisherService publisher;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        publisher = new InMemoryEventPublisher();
+        publisher = new InMemoryEventPublisherService();
     }
 
     @AfterMethod

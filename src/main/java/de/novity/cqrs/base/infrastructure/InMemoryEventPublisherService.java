@@ -36,15 +36,15 @@ import java.util.concurrent.BlockingQueue;
  * The events to be published by the <code>publish</code> methods are backed by a blocking queue and a spawned
  * thread publishing the queued events for the same reason.
  */
-public class InMemoryEventPublisher implements EventPublisher, EventPublisherService {
-    private static final Logger logger = LoggerFactory.getLogger(InMemoryEventPublisher.class);
+public class InMemoryEventPublisherService implements EventPublisher, EventPublisherService {
+    private static final Logger logger = LoggerFactory.getLogger(InMemoryEventPublisherService.class);
 
     private final List<EventSubscriber> subscribers;
     private final BlockingQueue<Event> eventQueue;
 
     private AsyncPublisher asyncPublisher;
 
-    public InMemoryEventPublisher() {
+    public InMemoryEventPublisherService() {
         this.subscribers = new ArrayList<EventSubscriber>();
         this.eventQueue = new ArrayBlockingQueue<Event>(1024);
         this.asyncPublisher = null;
