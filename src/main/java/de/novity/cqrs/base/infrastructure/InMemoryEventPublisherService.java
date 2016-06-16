@@ -36,79 +36,84 @@ import java.util.concurrent.BlockingQueue;
  * The events to be published by the <code>publish</code> methods are backed by a blocking queue and a spawned
  * thread publishing the queued events for the same reason.
  */
-public class InMemoryEventPublisherService implements EventPublisher, EventPublisherService {
+public class InMemoryEventPublisherService implements EventPublisherService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryEventPublisherService.class);
 
-    private final List<EventSubscriber> subscribers;
-    private final BlockingQueue<Event> eventQueue;
-
-    private AsyncPublisher asyncPublisher;
+    private EventPublisherImpl eventPublisher;
+    private boolean started;
 
     public InMemoryEventPublisherService() {
-        this.subscribers = new ArrayList<EventSubscriber>();
-        this.eventQueue = new ArrayBlockingQueue<Event>(1024);
-        this.asyncPublisher = null;
-
+        this.eventPublisher = new EventPublisherImpl();
+        this.started = false;
         logger.info("InMemoryPublisher created");
     }
 
-    public void addSubscriber(EventSubscriber subscriber) {
-        synchronized (subscribers) {
-            subscribers.add(subscriber);
-            logger.debug("Added subscriber " + subscriber);
-        }
-    }
-
-    public void removeSubscriber(EventSubscriber subscriber) {
-        synchronized (subscribers) {
-            subscribers.remove(subscriber);
-            logger.debug("Removed subscriber " + subscriber);
-        }
-    }
-
     public void start() {
-        if (asyncPublisher != null) {
+        if (isRunning()) {
             throw new IllegalStateException("Publisher is already started");
         }
 
-        asyncPublisher = new AsyncPublisher();
-        asyncPublisher.start();
+        eventPublisher.start();
+        started = true;
         logger.info("Publisher started");
     }
 
     public void stop() {
-        if (asyncPublisher == null) {
+        if (!isRunning()) {
             throw new IllegalStateException("Publisher is not started");
         }
 
         try {
-            asyncPublisher.interrupt();
-            asyncPublisher.join(1000);
+            eventPublisher.interrupt();
+            eventPublisher.join(1000);
             logger.info("Publisher stopped");
         } catch (InterruptedException e) {
            logger.error("Failed to stop publisher", e);
         } finally {
-            asyncPublisher = null;
+            started = false;
         }
     }
 
     public boolean isRunning() {
-        return asyncPublisher != null;
+        return started;
     }
 
-    public void publish(Event event) throws Exception {
-        eventQueue.put(event);
+    public EventPublisher getPublisher() {
+        return eventPublisher;
     }
 
-    public void publish(List<Event> events) throws Exception {
-        for (Event event : events) {
-            publish(event);
-        }
-    }
+    private class EventPublisherImpl extends Thread implements EventPublisher {
+        private final List<EventSubscriber> subscribers;
+        private final BlockingQueue<Event> eventQueue;
 
-    private class AsyncPublisher extends Thread {
-        public AsyncPublisher() {
+        private EventPublisherImpl() {
+            this.subscribers = new ArrayList<EventSubscriber>();
+            this.eventQueue = new ArrayBlockingQueue<Event>(1024);
             setName("publisher");
+        }
+
+        public void addSubscriber(EventSubscriber subscriber) {
+            synchronized (subscribers) {
+                subscribers.add(subscriber);
+                logger.debug("Added subscriber " + subscriber);
+            }
+        }
+
+        public void removeSubscriber(EventSubscriber subscriber) {
+            synchronized (subscribers) {
+                subscribers.remove(subscriber);
+                logger.debug("Removed subscriber " + subscriber);
+            }
+        }
+
+        public void publish(Event event) throws Exception {
+            eventQueue.put(event);
+        }
+
+        public void publish(List<Event> events) throws Exception {
+            for (Event event : events) {
+                publish(event);
+            }
         }
 
         @Override

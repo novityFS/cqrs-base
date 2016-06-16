@@ -20,4 +20,5 @@ public interface EventPublisherService {
     void start();
     void stop();
     boolean isRunning();
+    EventPublisher getPublisher();
 }

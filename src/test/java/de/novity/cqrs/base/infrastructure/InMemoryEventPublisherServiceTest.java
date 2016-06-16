@@ -17,6 +17,7 @@
 package de.novity.cqrs.base.infrastructure;
 
 import de.novity.cqrs.base.api.Event;
+import de.novity.cqrs.base.api.EventPublisher;
 import de.novity.cqrs.base.api.EventSubscriber;
 import mockit.Mocked;
 import mockit.Verifications;
@@ -27,31 +28,31 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
 public class InMemoryEventPublisherServiceTest {
-    private InMemoryEventPublisherService publisher;
+    private InMemoryEventPublisherService service;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        publisher = new InMemoryEventPublisherService();
+        service = new InMemoryEventPublisherService();
     }
 
     @AfterMethod
     public void tearDown() throws Exception{
-        if (publisher.isRunning()) {
-            publisher.stop();
+        if (service.isRunning()) {
+            service.stop();
         }
     }
 
     @Test
-    public void StartingEventPublisherStartsANewThread() throws Exception {
+    public void StartingEventPublisherServiceStartsANewThread() throws Exception {
         final int baseThreadCount = Thread.activeCount();
-        publisher.start();
+        service.start();
         assertEquals(Thread.activeCount(), baseThreadCount + 1);
     }
 
     @Test
-    public void StartedEventPublisherReportsThatItselfIsRunning() throws Exception {
-        publisher.start();
-        assertTrue(publisher.isRunning());
+    public void StartedEventPublisherServiceReportsThatItselfIsRunning() throws Exception {
+        service.start();
+        assertTrue(service.isRunning());
     }
 
     @Test(
@@ -59,9 +60,9 @@ public class InMemoryEventPublisherServiceTest {
                     IllegalStateException.class
             }
     )
-    public void EventPublisherCannotBeStartedTwice() throws Exception {
-        publisher.start();
-        publisher.start();
+    public void EventPublisherServiceCannotBeStartedTwice() throws Exception {
+        service.start();
+        service.start();
     }
 
     @Test(
@@ -69,20 +70,20 @@ public class InMemoryEventPublisherServiceTest {
                     IllegalStateException.class
             }
     )
-    public void NewEventPublisherCannotBeStopped() throws Exception {
-        publisher.stop();
+    public void NewEventPublisherServiceCannotBeStopped() throws Exception {
+        service.stop();
     }
 
     @Test()
-    public void NewEventPublisherReportsThatItselfIsNotRunning() throws Exception {
-        assertFalse(publisher.isRunning());
+    public void NewEventPublisherServiceReportsThatItselfIsNotRunning() throws Exception {
+        assertFalse(service.isRunning());
     }
 
     @Test()
-    public void StoppedEventPublisherReportsThatItselfIsNotRunning() throws Exception {
-        publisher.start();
-        publisher.stop();
-        assertFalse(publisher.isRunning());
+    public void StoppedEventPublisherServiceReportsThatItselfIsNotRunning() throws Exception {
+        service.start();
+        service.stop();
+        assertFalse(service.isRunning());
     }
 
     @Test(
@@ -90,16 +91,17 @@ public class InMemoryEventPublisherServiceTest {
                     IllegalStateException.class
             }
     )
-    public void RunningEventPublisherCannotBeStoppedTwice() throws Exception {
-        publisher.start();
-        publisher.stop();
-        publisher.stop();
+    public void RunningEventPublisherServiceCannotBeStoppedTwice() throws Exception {
+        service.start();
+        service.stop();
+        service.stop();
     }
 
     @Test
     public void WhenEventIsPublishedViaEventPublisherTheEventSubscriberReceivesThisEvent(final @Mocked EventSubscriber subscriber, final @Mocked Event event) throws Exception {
+        EventPublisher publisher = service.getPublisher();
         publisher.addSubscriber(subscriber);
-        publisher.start();
+        service.start();
 
         publisher.publish(event);
 
